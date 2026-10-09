@@ -7,6 +7,9 @@ Globals:
     Runtime: python3.13
     Timeout: 10
     MemorySize: 128
+    Environment:
+      Variables:
+        COLLEGE_ID: demo-college
 
 Resources:
   UserPool:
@@ -95,6 +98,52 @@ Resources:
             Path: /me
             Method: GET
 
+  ClubsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: collegeId
+          AttributeType: S
+        - AttributeName: clubId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: collegeId
+          KeyType: HASH
+        - AttributeName: clubId
+          KeyType: RANGE
+
+  ClubsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/clubs/
+      Handler: app.handler
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ClubsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ClubsTable
+      Events:
+        CreateClub:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /clubs
+            Method: POST
+        ListClubs:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /clubs
+            Method: GET
+        GetClub:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /clubs/{clubId}
+            Method: GET
+
 Outputs:
   ApiUrl:
     Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
@@ -102,3 +151,5 @@ Outputs:
     Value: !Ref UserPool
   UserPoolClientId:
     Value: !Ref UserPoolClient
+  ClubsTableName:
+    Value: !Ref ClubsTable
