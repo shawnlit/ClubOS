@@ -17,7 +17,7 @@ Resources:
     UpdateReplacePolicy: Retain
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: !Sub "${AWS::StackName}-users"
+      UserPoolName: !Sub ${AWS::StackName}-users
       UsernameAttributes:
         - email
       AutoVerifiedAttributes:
@@ -57,16 +57,19 @@ Resources:
     Type: AWS::Serverless::HttpApi
     Properties:
       CorsConfiguration:
-        AllowOrigins: ["*"]
-        AllowHeaders: ["*"]
-        AllowMethods: ["*"]
+        AllowOrigins:
+          - '*'
+        AllowHeaders:
+          - '*'
+        AllowMethods:
+          - '*'
       Auth:
         DefaultAuthorizer: CognitoAuthorizer
         Authorizers:
           CognitoAuthorizer:
             IdentitySource: $request.header.Authorization
             JwtConfiguration:
-              issuer: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}"
+              issuer: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
               audience:
                 - !Ref UserPoolClient
 
@@ -99,6 +102,8 @@ Resources:
             Method: GET
 
   ClubsTable:
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Type: AWS::DynamoDB::Table
     Properties:
       BillingMode: PAY_PER_REQUEST
@@ -146,7 +151,7 @@ Resources:
 
 Outputs:
   ApiUrl:
-    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
   UserPoolId:
     Value: !Ref UserPool
   UserPoolClientId:
