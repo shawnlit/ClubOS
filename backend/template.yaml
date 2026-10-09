@@ -10,6 +10,8 @@ Globals:
 
 Resources:
   UserPool:
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: !Sub "${AWS::StackName}-users"
