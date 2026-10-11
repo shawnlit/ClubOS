@@ -149,6 +149,70 @@ Resources:
             Path: /clubs/{clubId}
             Method: GET
 
+  MembershipsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: clubId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: clubId
+          KeyType: HASH
+        - AttributeName: userId
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: UserClubsIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: clubId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  MembershipsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/memberships/
+      Handler: app.handler
+      Environment:
+        Variables:
+          MEMBERSHIPS_TABLE: !Ref MembershipsTable
+          CLUBS_TABLE: !Ref ClubsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MembershipsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClubsTable
+      Events:
+        JoinClub:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /clubs/{clubId}/join
+            Method: POST
+        ListMembers:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /clubs/{clubId}/members
+            Method: GET
+        UpdateMember:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /clubs/{clubId}/members/{userId}
+            Method: PATCH
+        MyMemberships:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /me/memberships
+            Method: GET
+
 Outputs:
   ApiUrl:
     Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
@@ -158,3 +222,5 @@ Outputs:
     Value: !Ref UserPoolClient
   ClubsTableName:
     Value: !Ref ClubsTable
+  MembershipsTableName:
+    Value: !Ref MembershipsTable
