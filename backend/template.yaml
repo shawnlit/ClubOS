@@ -213,6 +213,103 @@ Resources:
             Path: /me/memberships
             Method: GET
 
+  EventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: clubId
+          AttributeType: S
+        - AttributeName: eventId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: clubId
+          KeyType: HASH
+        - AttributeName: eventId
+          KeyType: RANGE
+
+  RegistrationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: eventId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: eventId
+          KeyType: HASH
+        - AttributeName: userId
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: UserRegistrationsIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: eventId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  EventsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/events/
+      Handler: app.lambda_handler
+      Environment:
+        Variables:
+          EVENTS_TABLE: !Ref EventsTable
+          REGISTRATIONS_TABLE: !Ref RegistrationsTable
+          CLUBS_TABLE: !Ref ClubsTable
+          MEMBERSHIPS_TABLE: !Ref MembershipsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref EventsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RegistrationsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClubsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref MembershipsTable
+      Events:
+        CreateEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /clubs/{clubId}/events
+            Method: POST
+        ListEvents:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /clubs/{clubId}/events
+            Method: GET
+        GetEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /clubs/{clubId}/events/{eventId}
+            Method: GET
+        Register:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /clubs/{clubId}/events/{eventId}/register
+            Method: POST
+        CancelRegistration:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /clubs/{clubId}/events/{eventId}/register
+            Method: DELETE
+        MyRegistrations:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /me/registrations
+            Method: GET
+
 Outputs:
   ApiUrl:
     Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
