@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import secrets
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -209,6 +210,7 @@ def register(event):
         "collegeId": COLLEGE_ID,
         "email": claims.get("email", ""),
         "status": "registered",
+        "ticketId": secrets.token_urlsafe(18),
         "registeredAt": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -259,7 +261,9 @@ def cancel_registration(event):
                     "Delete": {
                         "TableName": REGISTRATIONS_TABLE,
                         "Key": {"eventId": event_id, "userId": user_id},
-                        "ConditionExpression": "attribute_exists(userId)",
+                        "ConditionExpression": "attribute_exists(userId) AND #s = :registered",
+                        "ExpressionAttributeNames": {"#s": "status"},
+                        "ExpressionAttributeValues": {":registered": "registered"},
                     }
                 },
                 {
@@ -278,6 +282,11 @@ def cancel_registration(event):
             raise
         codes = _cancellation_codes(error)
         if len(codes) > 0 and codes[0] == "ConditionalCheckFailed":
+            existing = registrations_table.get_item(
+                Key={"eventId": event_id, "userId": user_id}
+            ).get("Item")
+            if existing and existing.get("status") == "checked_in":
+                return _response(409, {"message": "Already checked in; cannot cancel"})
             return _response(404, {"message": "You are not registered for this event"})
         if len(codes) > 1 and codes[1] == "ConditionalCheckFailed":
             return _response(404, {"message": "Event not found"})

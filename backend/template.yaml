@@ -237,6 +237,8 @@ Resources:
           AttributeType: S
         - AttributeName: userId
           AttributeType: S
+        - AttributeName: ticketId
+          AttributeType: S
       KeySchema:
         - AttributeName: eventId
           KeyType: HASH
@@ -249,6 +251,12 @@ Resources:
               KeyType: HASH
             - AttributeName: eventId
               KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: TicketIndex
+          KeySchema:
+            - AttributeName: ticketId
+              KeyType: HASH
           Projection:
             ProjectionType: ALL
 
@@ -308,6 +316,43 @@ Resources:
           Properties:
             ApiId: !Ref HttpApi
             Path: /me/registrations
+            Method: GET
+
+  CheckinFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/checkin/
+      Handler: app.lambda_handler
+      Environment:
+        Variables:
+          EVENTS_TABLE: !Ref EventsTable
+          REGISTRATIONS_TABLE: !Ref RegistrationsTable
+          MEMBERSHIPS_TABLE: !Ref MembershipsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RegistrationsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref EventsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref MembershipsTable
+      Events:
+        GetTicket:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /clubs/{clubId}/events/{eventId}/ticket
+            Method: GET
+        CheckIn:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /clubs/{clubId}/events/{eventId}/checkin
+            Method: POST
+        Attendance:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /clubs/{clubId}/events/{eventId}/attendance
             Method: GET
 
 Outputs:
