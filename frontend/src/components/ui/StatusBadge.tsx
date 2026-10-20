@@ -1,5 +1,7 @@
 const styles: Record<string, string> = {
   approved: 'bg-green-50 text-green-700 border-green-200',
+  checked_in: 'bg-green-50 text-green-700 border-green-200',
+  registered: 'bg-blue-50 text-blue-700 border-blue-200',
   pending: 'bg-amber-50 text-amber-700 border-amber-200',
   rejected: 'bg-red-50 text-red-700 border-red-200',
 };
@@ -11,7 +13,7 @@ export default function StatusBadge({ status }: { status: string }) {
         styles[status] ?? 'bg-neutral-100 text-neutral-700 border-neutral-200'
       }`}
     >
-      {status}
+      {status.replace('_', ' ')}
     </span>
   );
 }

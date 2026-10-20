@@ -3,11 +3,14 @@ import { useAuth } from '../../hooks/useAuth';
 import { useLoad } from '../../hooks/useLoad';
 import { listClubs, listMyMemberships } from '../../services/clubs';
 import StatusBadge from '../../components/ui/StatusBadge';
+import { listMyRegistrations } from '../../services/events';
+import RegistrationRow from '../../components/events/RegistrationRow';
 
 export default function UserDashboard() {
   const { user } = useAuth();
   const memberships = useLoad(listMyMemberships);
   const clubs = useLoad(listClubs);
+  const registrations = useLoad(listMyRegistrations);
   const nameOf = (clubId: string) =>
     clubs.data?.find((c) => c.clubId === clubId)?.name ?? clubId;
 
@@ -57,6 +60,23 @@ export default function UserDashboard() {
                   <StatusBadge status={m.status} />
                 </div>
               </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="bg-white border border-neutral-200 rounded-lg p-6 sm:p-8 mt-6">
+        <h2 className="text-lg font-semibold text-neutral-900 mb-4">My registrations</h2>
+        {registrations.loading ? (
+          <p className="text-neutral-600">Loading…</p>
+        ) : registrations.error ? (
+          <p className="text-sm text-red-600">{registrations.error}</p>
+        ) : !registrations.data?.length ? (
+          <p className="text-neutral-600">You haven't registered for any events yet.</p>
+        ) : (
+          <ul className="divide-y divide-neutral-200">
+            {registrations.data.map((r) => (
+              <RegistrationRow key={r.eventId} registration={r} />
             ))}
           </ul>
         )}

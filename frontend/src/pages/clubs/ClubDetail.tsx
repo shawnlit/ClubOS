@@ -1,11 +1,16 @@
 import { useCallback, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import StatusBadge from '../../components/ui/StatusBadge';
+import { useAuth } from '../../hooks/useAuth';
 import { useLoad } from '../../hooks/useLoad';
 import { getClub, joinClub, listMyMemberships } from '../../services/clubs';
+import StatusBadge from '../../components/ui/StatusBadge';
+import EventsSection from '../../components/events/EventsSection';
+import MembersPanel from '../../components/clubs/MembersPanel';
+import { btnPrimary, cardClass } from '../../lib/styles';
 
 export default function ClubDetail() {
   const { clubId = '' } = useParams();
+  const { isAdmin } = useAuth();
   const loadClub = useCallback(() => getClub(clubId), [clubId]);
   const club = useLoad(loadClub);
   const mine = useLoad(listMyMemberships);
@@ -13,6 +18,7 @@ export default function ClubDetail() {
   const [joinError, setJoinError] = useState('');
 
   const membership = mine.data?.find((m) => m.clubId === clubId) ?? null;
+  const canManage = isAdmin || (membership?.status === 'approved' && membership.role === 'executive');
 
   async function handleJoin() {
     setJoinError('');
@@ -33,7 +39,7 @@ export default function ClubDetail() {
         ← All clubs
       </Link>
 
-      <div className="bg-white border border-neutral-200 rounded-lg p-6 sm:p-8 mt-4">
+      <div className={`${cardClass} mt-4`}>
         {club.loading ? (
           <p className="text-neutral-600">Loading…</p>
         ) : club.error || !club.data ? (
@@ -46,13 +52,12 @@ export default function ClubDetail() {
             <h1 className="text-2xl font-bold text-neutral-900 mt-1 mb-4">{club.data.name}</h1>
             {club.data.description && <p className="text-neutral-600 mb-6">{club.data.description}</p>}
 
-            {!mine.loading && !membership && (
-              <button
-                type="button"
-                onClick={handleJoin}
-                disabled={joining}
-                className="px-5 py-2.5 bg-neutral-900 text-white rounded-md text-sm font-medium hover:bg-neutral-800 transition-colors disabled:opacity-60"
-              >
+            {isAdmin && !membership && (
+              <p className="text-sm text-neutral-600">You manage all clubs as a college admin.</p>
+            )}
+
+            {!isAdmin && !mine.loading && !membership && (
+              <button type="button" onClick={handleJoin} disabled={joining} className={btnPrimary}>
                 {joining ? 'Sending…' : 'Request to join'}
               </button>
             )}
@@ -75,6 +80,9 @@ export default function ClubDetail() {
           </>
         )}
       </div>
+
+      {club.data && <EventsSection clubId={clubId} canManage={canManage} />}
+      {club.data && canManage && <MembersPanel clubId={clubId} isAdmin={isAdmin} />}
     </div>
   );
 }
