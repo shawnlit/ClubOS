@@ -78,6 +78,10 @@ export async function createClub(input: {
   await apiFetch<unknown>('/clubs', { method: 'POST', body: input });
 }
 
+export async function deleteClub(clubId: string): Promise<void> {
+  await apiFetch<unknown>(`/clubs/${encodeURIComponent(clubId)}`, { method: 'DELETE' });
+}
+
 export async function listMembers(clubId: string, status: MembershipStatus): Promise<Member[]> {
   const data = await apiFetch<{ members: Member[] }>(
     `/clubs/${encodeURIComponent(clubId)}/members?status=${encodeURIComponent(status)}`,

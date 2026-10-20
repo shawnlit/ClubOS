@@ -104,6 +104,32 @@ def get_club(club_id):
     return _response(200, _clean(club))
 
 
+def delete_club(club_id, claims):
+    if "college_admin" not in _groups(claims):
+        return _response(403, {"error": "Only college admins can delete clubs"})
+
+    try:
+        TABLE.update_item(
+            Key={"collegeId": COLLEGE_ID, "clubId": club_id},
+            UpdateExpression="SET #s = :inactive, deletedAt = :deleted_at, deletedBy = :deleted_by",
+            ConditionExpression="#s = :active",
+            ExpressionAttributeNames={"#s": "status"},
+            ExpressionAttributeValues={
+                ":active": "active",
+                ":inactive": "inactive",
+                ":deleted_at": datetime.now(timezone.utc).isoformat(),
+                ":deleted_by": claims["sub"],
+            },
+            ReturnValues="NONE",
+        )
+    except ClientError as err:
+        if err.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            return _response(404, {"error": "Club not found"})
+        return _response(500, {"error": "Could not delete club"})
+
+    return _response(200, {"message": "Club deleted"})
+
+
 def handler(event, context):
     claims = event["requestContext"]["authorizer"]["jwt"]["claims"]
     route = event["routeKey"]
@@ -114,4 +140,6 @@ def handler(event, context):
         return list_clubs()
     if route == "GET /clubs/{clubId}":
         return get_club(event["pathParameters"]["clubId"])
+    if route == "DELETE /clubs/{clubId}":
+        return delete_club(event["pathParameters"]["clubId"], claims)
     return _response(404, {"error": "Not found"})
