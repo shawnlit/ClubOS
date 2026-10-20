@@ -1,5 +1,5 @@
 import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { Building2, Home, LogIn, LogOut, User, Shield } from 'lucide-react';
+import { Building2, Home, LogIn, LogOut, User, Shield, Users } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function Header() {
@@ -10,6 +10,7 @@ export default function Header() {
     { to: '/', label: 'Home', icon: Home },
     ...(user
       ? [
+          { to: '/clubs', label: 'Clubs', icon: Users },
           { to: '/user', label: 'User', icon: User },
           ...(isAdmin ? [{ to: '/admin', label: 'Admin', icon: Shield }] : []),
         ]

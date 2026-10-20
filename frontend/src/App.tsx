@@ -7,6 +7,8 @@ import Home from './pages/Home';
 import Login from './pages/auth/Login';
 import UserDashboard from './pages/user/UserDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import ClubList from './pages/clubs/ClubList';
+import ClubDetail from './pages/clubs/ClubDetail';
 
 export default function App() {
   return (
@@ -18,6 +20,8 @@ export default function App() {
             <Route path="login" element={<Login />} />
             <Route element={<RequireAuth />}>
               <Route path="user" element={<UserDashboard />} />
+              <Route path="clubs" element={<ClubList />} />
+              <Route path="clubs/:clubId" element={<ClubDetail />} />
               <Route element={<RequireAdmin />}>
                 <Route path="admin" element={<AdminDashboard />} />
               </Route>
