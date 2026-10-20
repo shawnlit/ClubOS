@@ -1,12 +1,19 @@
-import { NavLink, Link } from 'react-router-dom';
-import { Building2, Home, LogIn, User, Shield } from 'lucide-react';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { Building2, Home, LogIn, LogOut, User, Shield } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function Header() {
+  const { user, isAdmin, logout } = useAuth();
+  const navigate = useNavigate();
+
   const navItems = [
     { to: '/', label: 'Home', icon: Home },
-    { to: '/login', label: 'Login', icon: LogIn },
-    { to: '/user', label: 'User', icon: User },
-    { to: '/admin', label: 'Admin', icon: Shield },
+    ...(user
+      ? [
+          { to: '/user', label: 'User', icon: User },
+          ...(isAdmin ? [{ to: '/admin', label: 'Admin', icon: Shield }] : []),
+        ]
+      : [{ to: '/login', label: 'Login', icon: LogIn }]),
   ];
 
   return (
@@ -38,6 +45,19 @@ export default function Header() {
               </NavLink>
             );
           })}
+          {user && (
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                navigate('/');
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </button>
+          )}
         </nav>
       </div>
     </header>

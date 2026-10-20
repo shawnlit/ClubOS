@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Home() {
+  const { user, isAdmin } = useAuth();
+
   return (
     <div className="max-w-2xl mx-auto text-center py-12">
       <span className="text-xs font-semibold tracking-wider text-neutral-500 uppercase">Home</span>
@@ -11,18 +14,31 @@ export default function Home() {
         One place to manage your club.
       </p>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <Link
-          to="/user"
-          className="w-full sm:w-auto px-5 py-2.5 bg-neutral-900 text-white rounded-md text-sm font-medium hover:bg-neutral-800 transition-colors"
-        >
-          User Dashboard
-        </Link>
-        <Link
-          to="/admin"
-          className="w-full sm:w-auto px-5 py-2.5 bg-white text-neutral-900 border border-neutral-300 rounded-md text-sm font-medium hover:bg-neutral-100 transition-colors"
-        >
-          Admin Dashboard
-        </Link>
+        {user ? (
+          <>
+            <Link
+              to="/user"
+              className="w-full sm:w-auto px-5 py-2.5 bg-neutral-900 text-white rounded-md text-sm font-medium hover:bg-neutral-800 transition-colors"
+            >
+              User Dashboard
+            </Link>
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="w-full sm:w-auto px-5 py-2.5 bg-white text-neutral-900 border border-neutral-300 rounded-md text-sm font-medium hover:bg-neutral-100 transition-colors"
+              >
+                Admin Dashboard
+              </Link>
+            )}
+          </>
+        ) : (
+          <Link
+            to="/login"
+            className="w-full sm:w-auto px-5 py-2.5 bg-neutral-900 text-white rounded-md text-sm font-medium hover:bg-neutral-800 transition-colors"
+          >
+            Login
+          </Link>
+        )}
       </div>
     </div>
   );

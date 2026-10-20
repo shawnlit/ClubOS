@@ -58,11 +58,17 @@ Resources:
     Properties:
       CorsConfiguration:
         AllowOrigins:
-          - '*'
-        AllowHeaders:
-          - '*'
+          - http://localhost:5173
         AllowMethods:
-          - '*'
+          - GET
+          - POST
+          - PATCH
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - Authorization
+          - Content-Type
+        MaxAge: 600
       Auth:
         DefaultAuthorizer: CognitoAuthorizer
         Authorizers:
